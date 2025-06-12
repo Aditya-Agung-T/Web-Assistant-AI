@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interaktif dengan AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        :root { --user-color: #007bff; --ai-color: #e9e9eb; --bg-color: #f0f2f5; --container-bg: #fff; --text-dark: #333; --text-light: #fff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 1rem; }
+        #persona-selector { display: flex; gap: 1rem; padding: 1rem; background-color: var(--container-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .persona-option { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.2s; }
+        .persona-option img { width: 60px; height: 60px; border-radius: 50%; margin-bottom: 0.5rem; }
+        .persona-option span { font-weight: bold; font-size: 0.9em; color: var(--text-dark); }
+        .persona-option.selected { border-color: var(--user-color); background-color: #e7f1ff; }
+        #chat-container { width: 90%; max-width: 800px; height: 80vh; max-height: 800px; background: var(--container-bg); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+        #chat-header { padding: 1rem; background: var(--user-color); color: var(--text-light); text-align: center; font-size: 1.2rem; font-weight: bold; }
+        #chat-box { flex-grow: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+        .message-row { display: flex; align-items: flex-end; gap: 10px; max-width: 90%; }
+        .message-avatar { width: 32px; height: 32px; border-radius: 50%; }
+        .message { padding: 0.75rem 1rem; border-radius: 18px; max-width: fit-content; line-height: 1.5; word-wrap: break-word; }
+        .user-message-row { align-self: flex-end; flex-direction: row-reverse; }
+        .user-message { background-color: var(--user-color); color: var(--text-light); border-bottom-right-radius: 4px; }
+        .ai-message-row { align-self: flex-start; }
+        .ai-message { background-color: var(--ai-color); color: var(--text-dark); border-bottom-left-radius: 4px; }
+        #chat-form { display: flex; padding: 1rem; border-top: 1px solid #ddd; gap: 0.5rem; }
+        #user-input { flex-grow: 1; padding: 0.75rem; border: 1px solid #ccc; border-radius: 20px; font-size: 1rem; }
+        #send-button { padding: 0.75rem 1.5rem; border: none; background-color: var(--user-color); color: var(--text-light); border-radius: 20px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        .message pre { position: relative; background-color: #282c34; color: #abb2bf; padding: 1rem; padding-top: 2.5rem; border-radius: 8px; overflow-x: auto; }
+        .copy-btn { position: absolute; top: 10px; right: 10px; background-color: #555; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.9em; opacity: 0; transition: opacity 0.2s; }
+        .message pre:hover .copy-btn { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div id="persona-selector"></div>
+    <div id="chat-container">
+        <div id="chat-header">Pilih Persona AI</div>
+        <div id="chat-box"></div>
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="Pilih persona untuk memulai..." autocomplete="off" disabled>
+            <button type="submit" id="send-button" disabled>Kirim</button>
+        </form>
+    </div>
+
+<script>
+    const personas = {
+        'emil': {
+            name: 'Emil',
+            avatar: 'https://api.dicebear.com/8.x/bottts-neutral/svg?seed=Emil',
+            systemPrompt: 'Anda adalah Emil, seorang programmer ahli dengan pengalaman 10 tahun di bidang pengembangan web dan AI. Gaya bicara Anda to-the-point, teknis, dan selalu menyertakan contoh kode jika memungkinkan. Jangan pernah keluar dari peran sebagai programmer.'
+        },
+        'anton': {
+            name: 'Anton',
+            avatar: 'https://api.dicebear.com/8.x/initials/svg?seed=Anton',
+            systemPrompt: 'Anda adalah Anton, seorang analis politik yang kritis dan objektif. Anda selalu memberikan jawaban yang seimbang dari berbagai sudut pandang. Gaya bicara Anda formal, terstruktur, dan analitis. Jangan pernah keluar dari peran sebagai analis politik.'
+        }
+    };
+
+    // Variabel global dan fungsi-fungsi lainnya tetap sama persis
+    const personaSelector = document.getElementById('persona-selector');
+    const chatHeader = document.getElementById('chat-header');
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    let chatHistory = [];
+    let selectedPersona = null;
+
+    function selectPersona(personaId) {
+        if (!personas[personaId]) return;
+        selectedPersona = personas[personaId];
+        chatHeader.textContent = `Chat dengan ${selectedPersona.name}`;
+        userInput.placeholder = `Kirim pesan ke ${selectedPersona.name}...`;
+        userInput.disabled = false; sendButton.disabled = false;
+        document.querySelectorAll('.persona-option').forEach(el => el.classList.remove('selected'));
+        document.querySelector(`.persona-option[data-id="${personaId}"]`).classList.add('selected');
+        chatBox.innerHTML = '';
+        const initialMessage = `Halo, saya ${selectedPersona.name}. Ada yang bisa saya bantu terkait bidang saya?`;
+        addMessageToUI('model', initialMessage);
+        chatHistory = [{ role: 'model', parts: [{ text: initialMessage }] }];
+    }
+
+    function addMessageToUI(sender, text) {
+        const messageRow = document.createElement('div');
+        messageRow.classList.add('message-row', `${sender}-message-row`);
+        const avatar = document.createElement('img');
+        avatar.classList.add('message-avatar');
+        // Ganti avatar user dengan avatar default atau salah satu dari persona
+        avatar.src = sender === 'model' ? selectedPersona.avatar : 'https://api.dicebear.com/8.x/adventurer-neutral/svg?seed=User';
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', `${sender}-message`);
+        if (sender === 'user') { messageElement.textContent = text; } 
+        else { messageElement.innerHTML = marked.parse(text); }
+        messageRow.appendChild(avatar);
+        messageRow.appendChild(messageElement);
+        chatBox.appendChild(messageRow);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return messageElement;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        Object.keys(personas).forEach(id => {
+            const p = personas[id];
+            const option = document.createElement('div');
+            option.className = 'persona-option';
+            option.dataset.id = id;
+            option.innerHTML = `<img src="${p.avatar}" alt="${p.name}"><span>${p.name}</span>`;
+            option.addEventListener('click', () => selectPersona(id));
+            personaSelector.appendChild(option);
+        });
+    });
+
+    chatForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        if (!selectedPersona) return;
+        const userMessage = userInput.value.trim();
+        if (userMessage === '') return;
+        addMessageToUI('user', userMessage);
+        userInput.value = '';
+        chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+        const payloadHistory = [{ role: 'user', parts: [{ text: selectedPersona.systemPrompt }] }, ...chatHistory ];
+        try {
+            const response = await fetch('/get-response', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ history: payloadHistory }),
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            const aiMessage = data.response;
+            const aiMessageElement = addMessageToUI('model', aiMessage);
+            chatHistory.push({ role: 'model', parts: [{ text: aiMessage }] });
+            aiMessageElement.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            addCopyButtons(aiMessageElement);
+        } catch (error) {
+            console.error('Error:', error);
+            addMessageToUI('model', 'Maaf, terjadi masalah koneksi.');
+        }
+    });
+
+    function addCopyButtons(container) {
+        const codeBlocks = container.querySelectorAll('pre');
+        codeBlocks.forEach(block => {
+            const codeElement = block.querySelector('code');
+            if (!codeElement) return;
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-btn'; copyButton.textContent = 'Copy';
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(codeElement.innerText).then(() => {
+                    copyButton.textContent = 'Copied!'; setTimeout(() => { copyButton.textContent = 'Copy'; }, 2000);
+                }).catch(err => { console.error('Gagal menyalin kode: ', err); });
+            });
+            block.appendChild(copyButton);
+        });
+    }
+</script>
+</body>
+</html>
