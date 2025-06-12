@@ -10,8 +10,8 @@
     <style>
         :root { --user-color: #007bff; --ai-color: #e9e9eb; --bg-color: #f0f2f5; --container-bg: #fff; --text-dark: #333; --text-light: #fff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 1rem; }
-        #persona-selector { display: flex; gap: 1rem; padding: 1rem; background-color: var(--container-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .persona-option { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.2s; }
+        #persona-selector { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; background-color: var(--container-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); align-items: center;}
+        .persona-option { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.2s; text-align: center; }
         .persona-option img { width: 60px; height: 60px; border-radius: 50%; margin-bottom: 0.5rem; }
         .persona-option span { font-weight: bold; font-size: 0.9em; color: var(--text-dark); }
         .persona-option.selected { border-color: var(--user-color); background-color: #e7f1ff; }
@@ -31,6 +31,24 @@
         .message pre { position: relative; background-color: #282c34; color: #abb2bf; padding: 1rem; padding-top: 2.5rem; border-radius: 8px; overflow-x: auto; }
         .copy-btn { position: absolute; top: 10px; right: 10px; background-color: #555; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.9em; opacity: 0; transition: opacity 0.2s; }
         .message pre:hover .copy-btn { opacity: 1; }
+        #add-persona-btn { width: 60px; height: 60px; border-radius: 50%; border: 2px dashed #ccc; background-color: #f9f9f9; cursor: pointer; font-size: 2rem; color: #aaa; display: flex; justify-content: center; align-items: center; transition: all 0.2s; }
+        #add-persona-btn:hover { background-color: #f0f0f0; color: #888; border-color: #aaa; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 500px; }
+        .modal-content h2 { margin-top: 0; }
+        .modal-content .form-group { margin-bottom: 1rem; }
+        .modal-content .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        .modal-content .form-group input, .modal-content .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        .modal-content .form-group textarea { min-height: 120px; resize: vertical; }
+        .modal-buttons { text-align: right; margin-top: 1.5rem; }
+        .modal-buttons button { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-left: 0.5rem; }
+        #modal-save-btn { background-color: var(--user-color); color: white; }
+        #modal-cancel-btn { background-color: #ccc; }
+        .typing-indicator { display: flex; align-items: center; padding: 0.75rem 1rem; }
+        .typing-indicator span { height: 8px; width: 8px; background-color: #aaa; border-radius: 50%; display: inline-block; margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-of-type(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-of-type(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
     </style>
 </head>
 <body>
@@ -42,6 +60,25 @@
             <input type="text" id="user-input" placeholder="Pilih persona untuk memulai..." autocomplete="off" disabled>
             <button type="submit" id="send-button" disabled>Kirim</button>
         </form>
+    </div>
+    <div class="modal-overlay" id="persona-modal-overlay">
+        <div class="modal-content">
+            <h2>Buat Persona Baru</h2>
+            <form id="persona-form">
+                <div class="form-group">
+                    <label for="persona-name">Nama Persona</label>
+                    <input type="text" id="persona-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="persona-prompt">Role / System Prompt</label>
+                    <textarea id="persona-prompt" required placeholder="Contoh: Anda adalah seorang koki profesional yang memberikan resep masakan..."></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" id="modal-cancel-btn">Batal</button>
+                    <button type="submit" id="modal-save-btn">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
 
 <script>
@@ -58,7 +95,6 @@
         }
     };
 
-    // Variabel global dan fungsi-fungsi lainnya tetap sama persis
     const personaSelector = document.getElementById('persona-selector');
     const chatHeader = document.getElementById('chat-header');
     const chatBox = document.getElementById('chat-box');
@@ -68,6 +104,12 @@
     let chatHistory = [];
     let selectedPersona = null;
 
+    const modalOverlay = document.getElementById('persona-modal-overlay');
+    const personaForm = document.getElementById('persona-form');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const personaNameInput = document.getElementById('persona-name');
+    const personaPromptInput = document.getElementById('persona-prompt');
+
     function selectPersona(personaId) {
         if (!personas[personaId]) return;
         selectedPersona = personas[personaId];
@@ -75,11 +117,11 @@
         userInput.placeholder = `Kirim pesan ke ${selectedPersona.name}...`;
         userInput.disabled = false; sendButton.disabled = false;
         document.querySelectorAll('.persona-option').forEach(el => el.classList.remove('selected'));
-        document.querySelector(`.persona-option[data-id="${personaId}"]`).classList.add('selected');
+        const selectedElement = document.querySelector(`.persona-option[data-id="${personaId}"]`);
+        if (selectedElement) { selectedElement.classList.add('selected'); }
         chatBox.innerHTML = '';
-        const initialMessage = `Halo, saya ${selectedPersona.name}. Ada yang bisa saya bantu terkait bidang saya?`;
-        addMessageToUI('model', initialMessage);
-        chatHistory = [{ role: 'model', parts: [{ text: initialMessage }] }];
+        chatHistory = [];
+        userInput.focus();
     }
 
     function addMessageToUI(sender, text) {
@@ -87,7 +129,6 @@
         messageRow.classList.add('message-row', `${sender}-message-row`);
         const avatar = document.createElement('img');
         avatar.classList.add('message-avatar');
-        // Ganti avatar user dengan avatar default atau salah satu dari persona
         avatar.src = sender === 'model' ? selectedPersona.avatar : 'https://api.dicebear.com/8.x/adventurer-neutral/svg?seed=User';
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', `${sender}-message`);
@@ -99,32 +140,99 @@
         chatBox.scrollTop = chatBox.scrollHeight;
         return messageElement;
     }
+    
+    function addPersonaOptionToUI(id, persona) {
+        const option = document.createElement('div');
+        option.className = 'persona-option';
+        option.dataset.id = id;
+        option.innerHTML = `<img src="${persona.avatar}" alt="${persona.name}"><span>${persona.name}</span>`;
+        option.addEventListener('click', () => selectPersona(id));
+        personaSelector.appendChild(option);
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         Object.keys(personas).forEach(id => {
-            const p = personas[id];
-            const option = document.createElement('div');
-            option.className = 'persona-option';
-            option.dataset.id = id;
-            option.innerHTML = `<img src="${p.avatar}" alt="${p.name}"><span>${p.name}</span>`;
-            option.addEventListener('click', () => selectPersona(id));
-            personaSelector.appendChild(option);
+            addPersonaOptionToUI(id, personas[id]);
         });
+        const addBtnContainer = document.createElement('div');
+        addBtnContainer.className = 'persona-option';
+        const addBtn = document.createElement('button');
+        addBtn.id = 'add-persona-btn';
+        addBtn.textContent = '+';
+        addBtn.title = 'Buat Persona Baru';
+        addBtnContainer.appendChild(addBtn);
+        personaSelector.appendChild(addBtnContainer);
+        addBtn.addEventListener('click', () => {
+            modalOverlay.style.display = 'flex';
+        });
+    });
+
+    modalCancelBtn.addEventListener('click', () => {
+        modalOverlay.style.display = 'none';
+    });
+    
+    personaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = personaNameInput.value.trim();
+        const userPrompt = personaPromptInput.value.trim(); 
+
+        if (name && userPrompt) {
+            // --- PERBAIKAN FINAL ADA DI SINI ---
+            // 1. Buat instruksi identitas nama
+            const identityPrompt = `Nama Anda adalah ${name}.`;
+
+            // 2. Buat aturan pengunci peran
+            const roleEnforcer = "\n\nPeraturan Penting: Patuhi peran Anda secara ketat. Jika pengguna bertanya atau meminta sesuatu di luar lingkup keahlian sesuai peran Anda, Anda harus menolaknya dengan sopan. Jelaskan bahwa hal tersebut di luar keahlian Anda sesuai dengan peran yang Anda miliki. JANGAN menjawab atau membuat konten di luar peran Anda.";
+            
+            // 3. Gabungkan semuanya
+            const finalSystemPrompt = `${identityPrompt} ${userPrompt} ${roleEnforcer}`;
+
+            const id = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+            const newPersona = {
+                name: name,
+                avatar: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(name)}`,
+                systemPrompt: finalSystemPrompt // Gunakan prompt final yang sudah lengkap
+            };
+            
+            personas[id] = newPersona;
+            addPersonaOptionToUI(id, newPersona);
+            
+            personaNameInput.value = '';
+            personaPromptInput.value = '';
+            modalOverlay.style.display = 'none';
+            
+            selectPersona(id);
+        }
     });
 
     chatForm.addEventListener('submit', async function(event) {
         event.preventDefault();
-        if (!selectedPersona) return;
+        if (!selectedPersona || userInput.disabled) return;
         const userMessage = userInput.value.trim();
         if (userMessage === '') return;
+
         addMessageToUI('user', userMessage);
         userInput.value = '';
         chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-        const payloadHistory = [{ role: 'user', parts: [{ text: selectedPersona.systemPrompt }] }, ...chatHistory ];
+
+        const payload = {
+            prompt: selectedPersona.systemPrompt,
+            history: chatHistory 
+        };
+
+        userInput.disabled = true;
+        sendButton.disabled = true;
+        const loadingIndicatorRow = document.createElement('div');
+        loadingIndicatorRow.id = 'loading-indicator';
+        loadingIndicatorRow.classList.add('message-row', 'ai-message-row');
+        loadingIndicatorRow.innerHTML = `<img class="message-avatar" src="${selectedPersona.avatar}" alt="AI"><div class="message ai-message typing-indicator"><span></span><span></span><span></span></div>`;
+        chatBox.appendChild(loadingIndicatorRow);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
         try {
             const response = await fetch('/get-response', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ history: payloadHistory }),
+                body: JSON.stringify(payload),
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
@@ -136,6 +244,12 @@
         } catch (error) {
             console.error('Error:', error);
             addMessageToUI('model', 'Maaf, terjadi masalah koneksi.');
+        } finally {
+            const indicator = document.getElementById('loading-indicator');
+            if (indicator) indicator.remove();
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            userInput.focus();
         }
     });
 

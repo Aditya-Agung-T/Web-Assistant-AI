@@ -1,32 +1,33 @@
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
-def generate_from_history(conversation_history: list) -> str:
+def generate_from_history(system_prompt: str, conversation_history: list) -> str:
     """
-    Menghasilkan respons AI berdasarkan seluruh riwayat percakapan.
+    Menghasilkan respons AI berdasarkan instruksi sistem dan riwayat percakapan.
 
     Args:
+        system_prompt: Instruksi peran untuk AI.
         conversation_history: Sebuah list berisi objek pesan dari user dan model.
     """
     try:
-        client = genai.Client(
-            api_key=os.environ.get("GEMINI_API_KEY"),
+        # Konfigurasi API key
+        genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+        # Inisialisasi model dengan instruksi sistem
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=system_prompt
         )
-
-        model = "gemini-1.5-flash-latest"
         
-        # 'contents' sekarang langsung diisi dari riwayat percakapan
-        contents = conversation_history
-
-        generate_content_config = types.GenerateContentConfig(
+        # Konfigurasi output
+        generation_config = genai.types.GenerationConfig(
             response_mime_type="text/plain",
         )
 
-        response = client.models.generate_content(
-            model=model,
-            contents=contents,
-            config=generate_content_config,
+        # Hasilkan konten berdasarkan riwayat
+        response = model.generate_content(
+            contents=conversation_history,
+            generation_config=generation_config
         )
         
         return response.text

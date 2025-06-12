@@ -9,14 +9,16 @@ def index():
 
 @app.route('/get-response', methods=['POST'])
 def get_response():
-    # Sekarang kita mengharapkan 'history' bukan 'message'
-    history = request.json.get('history')
+    data = request.json
+    # Ambil prompt dan history sebagai dua data terpisah
+    system_prompt = data.get('prompt')
+    history = data.get('history')
     
-    if not history:
-        return jsonify({'error': 'Riwayat percakapan tidak boleh kosong'}), 400
+    if not system_prompt or history is None: # history bisa saja list kosong
+        return jsonify({'error': 'Prompt dan Riwayat percakapan tidak boleh kosong'}), 400
     
-    # Panggil fungsi generator baru dengan seluruh riwayat
-    ai_response = generator.generate_from_history(history)
+    # Panggil fungsi generator baru dengan dua argumen
+    ai_response = generator.generate_from_history(system_prompt, history)
     
     return jsonify({'response': ai_response})
 
