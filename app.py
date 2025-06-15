@@ -11,13 +11,13 @@ import generator
 
 # Inisialisasi & Konfigurasi
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "AIzaSyDWoFkynWoyA8PDYjR9OLzkCkcmBcQHdKI1782197"
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['GOOGLE_CLIENT_ID'] = "147124461540-avumkjis6ecsdislnt2i359rpjfq8rtg.apps.googleusercontent.com"
-app.config['GOOGLE_CLIENT_SECRET'] = "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"
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID')
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET')
 
 # Inisialisasi Ekstensi
 db = SQLAlchemy(app)
