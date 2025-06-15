@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Login</h2>
+                <form method="POST" action="" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                         {% if form.email.errors %}
+                            {{ form.email(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.email(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {% if form.password.errors %}
+                            {{ form.password(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.password.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.password(class="form-control") }}
+                        {% endif %}
+                    </div>
+                    <div class="d-grid mt-4">
+                        {{ form.submit(class="btn btn-primary btn-block") }}
+                    </div>
+                </form>
+                <hr>
+                <div class="text-center">
+                    <p class="text-muted small">atau</p>
+                    <a href="{{ url_for('google_login') }}" class="btn btn-outline-danger w-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google me-2" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 0 .139-1.626H0v3.08h8.508a4.736 4.736 0 0 1-1.99 2.057v2.58h3.31a9.782 9.782 0 0 0 2.986-7.09z"/><path d="M15.964 8.243a10.003 10.003 0 0 1-8.15 4.34c-2.81 0-5.2-1.85-6.13-4.35H.03v2.73h.002c.98 1.95 2.918 3.28 5.4 3.28 2.52 0 4.6-1.4 5.37-3.32h-.08a6.38 6.38 0 0 1-.88.22c-.2.03-.4.04-.6.04-.3 0-.6-.02-.9-.05a5 5 0 0 1-4.4-2.2H15.96z"/></svg>
+                        Login dengan Google
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-center py-3">
+                <small class="text-muted">Belum punya akun? <a href="{{ url_for('register') }}">Register di sini</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
