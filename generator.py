@@ -4,7 +4,7 @@ import google.generativeai as genai
 # Fungsi ini tidak berubah
 def generate_from_history(system_prompt: str, conversation_history: list) -> str:
     try:
-        genai.configure(api_key="AIzaSyDWoFkynWoyA8PDYjR9OLzkCkcmBcQHdKI")
+        genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
         model = genai.GenerativeModel(
             model_name="gemini-2.5-flash-preview-05-20",
             system_instruction=system_prompt
