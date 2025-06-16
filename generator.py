@@ -25,7 +25,7 @@ def generate_from_history(system_prompt: str, conversation_history: list) -> str
 def summarize_role(description: str) -> str:
     try:
         genai.configure(api_key="AIzaSyDWoFkynWoyA8PDYjR9OLzkCkcmBcQHdKI")
-        model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest")
+        model = genai.GenerativeModel(model_name="gemini-2.5-flash-preview-05-20")
         prompt = f"""
         TUGAS ANDA: Meringkas deskripsi peran berikut menjadi jabatan pekerjaan yang sangat singkat.
         ATURAN KETAT:
@@ -55,7 +55,7 @@ def generate_nuanced_prompt(description: str) -> str:
     """
     try:
         genai.configure(api_key="AIzaSyDWoFkynWoyA8PDYjR9OLzkCkcmBcQHdKI")
-        model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest")
+        model = genai.GenerativeModel(model_name="gemini-2.5-flash-preview-05-20")
         
         prompt = f"""
         Anda adalah seorang Prompt Engineer ahli. Tugas Anda adalah mengubah deskripsi peran sederhana menjadi sebuah prompt kepribadian yang cerdas dan bernuansa untuk sebuah chatbot AI.
