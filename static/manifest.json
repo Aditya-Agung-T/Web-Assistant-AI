@@ -1,0 +1,21 @@
+{
+    "name": "AI Partner Chat",
+    "short_name": "AI Partner",
+    "description": "Aplikasi Chat Interaktif dengan Persona AI",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f8f9fa",
+    "theme_color": "#007bff",
+    "icons": [
+        {
+            "src": "https://api.dicebear.com/8.x/bottts-neutral/svg?seed=WebAppIcon&size=192",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "https://api.dicebear.com/8.x/bottts-neutral/svg?seed=WebAppIcon&size=512",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ]
+}
