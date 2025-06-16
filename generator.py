@@ -16,7 +16,7 @@ def _call_cerebras_api(messages: list) -> str:
     try:
         stream = client.chat.completions.create(
             messages=messages,
-            model="deepseek-r1-distill-llama-70b", # atau model Cerebras lain yang Anda inginkan
+            model="llama-3.3-70b", # atau model Cerebras lain yang Anda inginkan
             stream=True,
             temperature=0.2,
             top_p=1
