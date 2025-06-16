@@ -16,7 +16,7 @@ def _call_cerebras_api(messages: list) -> str:
     try:
         stream = client.chat.completions.create(
             messages=messages,
-            model="csl-hermes-15b-dpo", # atau model Cerebras lain yang Anda inginkan
+            model="llama-4-scout-17b-16e-instruct", # atau model Cerebras lain yang Anda inginkan
             stream=True,
             temperature=0.2,
             top_p=1
