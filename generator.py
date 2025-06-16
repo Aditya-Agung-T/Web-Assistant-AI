@@ -16,7 +16,7 @@ def _call_cerebras_api(messages: list) -> str:
     try:
         stream = client.chat.completions.create(
             messages=messages,
-            model="qwen-3-32b",
+            model="llama-4-scout-17b-16e-instruct",
             stream=True,
             temperature=0.3,
             top_p=1
