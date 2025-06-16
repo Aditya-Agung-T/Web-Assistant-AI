@@ -4,65 +4,93 @@
 
 {% block extra_head %}
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#007bff">
+    <meta name="theme-color" content="#1e1f20">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
 {% endblock %}
 
 {% block content %}
-    <div id="persona-selector"></div>
-    <div id="chat-container">
-        <div id="chat-header">Pilih Persona AI</div>
-        <div id="chat-box"></div>
-        <div id="chat-form">
-            <input type="text" id="user-input" placeholder="Pilih persona untuk memulai..." autocomplete="off" disabled>
-            <div class="partner-mode-container">
-                <label for="partner-mode-toggle" class="switch">
-                    <input type="checkbox" id="partner-mode-toggle">
-                    <span class="slider"></span>
-                </label>
-                <label for="partner-mode-toggle">Mode Partner</label>
-            </div>
-            <button type="button" id="send-button" disabled>Kirim</button>
+<div class="main-layout">
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h4>Riwayat Chat</h4>
         </div>
-    </div>
+        <ul id="persona-list" class="list-unstyled">
+            </ul>
+        <div class="sidebar-footer">
+            <button id="add-persona-btn" class="btn btn-secondary w-100">
+                + Persona Baru
+            </button>
+        </div>
+    </nav>
 
-    <div class="modal-overlay" id="persona-modal-overlay">
-        <div class="modal-content">
-            <h2>Buat Persona Baru</h2>
-            <form id="persona-form">
-                <div class="form-group">
-                    <label for="persona-name">Nama Persona</label>
-                    <input type="text" id="persona-name" required>
+    <div id="chat-wrapper">
+        <div id="chat-container">
+            <div id="chat-header">
+                <span id="chat-header-title">Pilih Persona untuk Memulai</span>
+                <button id="reset-chat-btn" title="Reset Percakapan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="chat-box">
+                <div class="welcome-message">
+                    <h3>Selamat Datang di AI Partner</h3>
+                    <p>Pilih salah satu persona dari panel di sebelah kiri untuk memulai percakapan, atau buat persona baru sesuai kebutuhan Anda.</p>
                 </div>
-                <div class="form-group">
-                    <label for="persona-prompt">Deskripsi Peran</label>
-                    <textarea id="persona-prompt" required placeholder="Contoh: Seorang koki profesional yang memberikan resep masakan..."></textarea>
+            </div>
+            <div id="chat-form">
+                <input type="text" id="user-input" placeholder="Pilih persona untuk memulai..." autocomplete="off" disabled>
+                <div class="partner-mode-container">
+                    <label for="partner-mode-toggle" class="switch">
+                        <input type="checkbox" id="partner-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <label for="partner-mode-toggle">Mode Partner</label>
                 </div>
-                <div class="modal-buttons">
-                    <button type="button" id="modal-cancel-btn">Batal</button>
-                    <button type="submit" id="modal-save-btn">Simpan</button>
-                </div>
-            </form>
+                <button type="button" id="send-button" disabled>Kirim</button>
+            </div>
         </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-    
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}").then(registration => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+</div>
+
+<div class="modal-overlay" id="persona-modal-overlay">
+    <div class="modal-content">
+        <h2>Buat Persona Baru</h2>
+        <form id="persona-form">
+            <div class="form-group">
+                <label for="persona-name">Nama Persona</label>
+                <input type="text" id="persona-name" required>
+            </div>
+            <div class="form-group">
+                <label for="persona-prompt">Deskripsi Peran</label>
+                <textarea id="persona-prompt" required placeholder="Contoh: Seorang koki profesional..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" id="modal-cancel-btn">Batal</button>
+                <button type="submit" id="modal-save-btn">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}").then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, err => {
+                console.log('ServiceWorker registration failed: ', err);
             });
-        }
-    </script>
+        });
+    }
+</script>
 {% endblock %}
