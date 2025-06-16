@@ -16,10 +16,10 @@ def _call_cerebras_api(messages: list) -> str:
     try:
         stream = client.chat.completions.create(
             messages=messages,
-            model="deepseek-r1-distill-llama-70b",
+            model="llama-4-scout-17b-16e-instruct",
             stream=True,
             max_completion_tokens=10240,
-            temperature=0.7,
+            temperature=0.4,
             top_p=1
         )
         
