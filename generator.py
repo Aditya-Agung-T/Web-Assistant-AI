@@ -18,6 +18,7 @@ def _call_cerebras_api(messages: list) -> str:
             messages=messages,
             model="llama-4-scout-17b-16e-instruct",
             stream=True,
+            max_tokens=8192,
             temperature=0.3,
             top_p=1
         )
