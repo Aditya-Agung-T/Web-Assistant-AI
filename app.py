@@ -58,6 +58,23 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return self.password_hash and check_password_hash(self.password_hash, password)
 
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    persona_id = db.Column(db.String(120), nullable=False) # ID unik persona, cth: 'emil' atau 'anton-168...
+    role = db.Column(db.String(10), nullable=False) # 'user' atau 'model'
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('messages', lazy=True))
+
+    def to_dict(self):
+        """Mengubah objek pesan menjadi format dictionary yang bisa di-serialize ke JSON."""
+        return {
+            "role": self.role,
+            "parts": [{"text": self.content}]
+        }
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -158,16 +175,52 @@ def google_auth():
     login_user(user)
     return redirect(url_for('chat'))
 
+
+@app.route('/get-history/<persona_id>')
+@login_required
+def get_history(persona_id):
+    messages = ChatMessage.query.filter_by(user_id=current_user.id, persona_id=persona_id).order_by(ChatMessage.timestamp).all()
+    history = [msg.to_dict() for msg in messages]
+    return jsonify(history)
+
+
 @app.route('/get-response', methods=['POST'])
 @login_required
 def get_response():
     data = request.json
     system_prompt = data.get('prompt')
     history = data.get('history')
-    if not system_prompt or history is None:
-        return jsonify({'error': 'Prompt dan Riwayat percakapan tidak boleh kosong'}), 400
-    ai_response = generator.generate_from_history(system_prompt, history)
-    return jsonify({'response': ai_response})
+    user_message_text = history[-1]['parts'][0]['text'] # Ambil pesan terakhir dari user
+    persona_id = data.get('persona_id') # Kita akan kirim ini dari frontend
+
+    if not system_prompt or history is None or not persona_id:
+        return jsonify({'error': 'Prompt, Riwayat, dan ID Persona tidak boleh kosong'}), 400
+
+    # 1. Simpan pesan dari pengguna
+    user_message = ChatMessage(
+        user_id=current_user.id,
+        persona_id=persona_id,
+        role='user',
+        content=user_message_text
+    )
+    db.session.add(user_message)
+
+    # 2. Hasilkan respons dari AI
+    ai_response_text = generator.generate_from_history(system_prompt, history)
+
+    # 3. Simpan respons dari AI
+    ai_message = ChatMessage(
+        user_id=current_user.id,
+        persona_id=persona_id,
+        role='model',
+        content=ai_response_text
+    )
+    db.session.add(ai_message)
+
+    # 4. Commit kedua pesan ke database
+    db.session.commit()
+
+    return jsonify({'response': ai_response_text})
     
 @app.route('/summarize-role', methods=['POST'])
 @login_required

@@ -73,12 +73,32 @@ function renderChatHistory(history) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function selectPersona(personaId) {
+async function selectPersona(personaId) {
     if (!personas[personaId]) return;
     selectedPersona = personas[personaId];
     currentPersonaId = personaId;
-    if (!allChatHistories[personaId]) {
-        allChatHistories[personaId] = [];
+
+    // Tampilkan loading atau bersihkan chatbox lama
+    chatBox.innerHTML = '<div class="notification-message">Memuat riwayat percakapan...</div>';
+
+    try {
+        // Panggil endpoint baru kita
+        const response = await fetch(`/get-history/${personaId}`);
+        if (!response.ok) {
+            throw new Error('Gagal memuat riwayat.');
+        }
+        const history = await response.json();
+        
+        // Simpan ke state lokal dan render
+        allChatHistories[personaId] = history;
+        chatHistory = allChatHistories[personaId];
+        renderChatHistory(chatHistory);
+
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        chatBox.innerHTML = '<div class="notification-message" style="color: red;">Gagal memuat riwayat.</div>';
+        allChatHistories[personaId] = []; // Reset jika gagal
+        chatHistory = [];
     }
     chatHistory = allChatHistories[personaId];
     renderChatHistory(chatHistory);
@@ -228,7 +248,8 @@ const sendMessage = async () => {
 
     const payload = {
         prompt: finalSystemPrompt,
-        history: chatHistory 
+        history: chatHistory,
+        persona_id: currentPersonaId // Tambahkan baris ini
     };
 
     userInput.disabled = true;
