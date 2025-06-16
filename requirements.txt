@@ -15,3 +15,6 @@ google-generativeai
 
 # Validasi email untuk form
 email_validator
+
+# API AI Cerebras
+cerebras-cloud-sdk
