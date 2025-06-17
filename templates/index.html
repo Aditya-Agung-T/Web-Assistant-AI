@@ -18,10 +18,17 @@
 <div class="main-layout">
     <nav id="sidebar">
         <div class="sidebar-header">
-            <h4>Riwayat Chat</h4>
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Riwayat Chat</h4>
+                <button class="btn btn-sm btn-outline-light d-lg-none" id="close-sidebar-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         <ul id="persona-list" class="list-unstyled">
-            </ul>
+        </ul>
         <div class="sidebar-footer">
             <button id="add-persona-btn" class="btn btn-secondary w-100">
                 + Persona Baru
@@ -48,6 +55,7 @@
             </div>
             <div id="chat-form">
                 <input type="text" id="user-input" placeholder="Pilih persona untuk memulai..." autocomplete="off" disabled>
+                <button id="send-button" disabled>Kirim</button>
                 <div class="partner-mode-container">
                     <label for="partner-mode-toggle" class="switch">
                         <input type="checkbox" id="partner-mode-toggle">
@@ -55,42 +63,12 @@
                     </label>
                     <label for="partner-mode-toggle">Mode Partner</label>
                 </div>
-                <button type="button" id="send-button" disabled>Kirim</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="persona-modal-overlay">
-    <div class="modal-content">
-        <h2>Buat Persona Baru</h2>
-        <form id="persona-form">
-            <div class="form-group">
-                <label for="persona-name">Nama Persona</label>
-                <input type="text" id="persona-name" required>
-            </div>
-            <div class="form-group">
-                <label for="persona-prompt">Deskripsi Peran</label>
-                <textarea id="persona-prompt" required placeholder="Contoh: Seorang koki profesional..."></textarea>
-            </div>
-            <div class="modal-buttons">
-                <button type="button" id="modal-cancel-btn">Batal</button>
-                <button type="submit" id="modal-save-btn">Simpan</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Modal untuk Persona Baru (sesuaikan dengan modal yang sudah ada) -->
 
-<script src="{{ url_for('static', filename='script.js') }}" defer></script>
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}").then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, err => {
-                console.log('ServiceWorker registration failed: ', err);
-            });
-        });
-    }
-</script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 {% endblock %}
