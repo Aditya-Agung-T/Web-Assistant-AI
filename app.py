@@ -88,12 +88,19 @@ class ChatMessage(db.Model):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
+# =================================================================
+# BAGIAN YANG DIPERBAIKI
+# =================================================================
 def create_default_personas_for_user(user):
     """Membuat persona default (Emil & Anton) untuk pengguna baru."""
     if not Persona.query.filter_by(user_id=user.id).first():
+        # FIX: Buat ID unik dengan menambahkan user.id
+        emil_id = f'emil-default-{user.id}'
+        anton_id = f'anton-default-{user.id}'
+
         emil = Persona(
             owner=user,
-            persona_id_str='emil-default',
+            persona_id_str=emil_id,  # Gunakan ID unik
             name='Emil',
             display_role='Programmer Web & AI',
             base_prompt='Nama Anda adalah Emil. Peran utama Anda adalah sebagai sumber daya teknis ahli. Anda dapat memberikan penjelasan, panduan arsitektur, dan contoh kode untuk pertanyaan teknis terkait pengembangan web dan AI.',
@@ -101,7 +108,7 @@ def create_default_personas_for_user(user):
         )
         anton = Persona(
             owner=user,
-            persona_id_str='anton-default',
+            persona_id_str=anton_id, # Gunakan ID unik
             name='Anton',
             display_role='Analis Politik Kritis',
             base_prompt='Nama Anda adalah Anton. Peran utama Anda adalah sebagai analis politik yang kritis dan objektif. Anda selalu memberikan jawaban yang seimbang dari berbagai sudut pandang dan data. Saat memperkenalkan diri untuk pertama kali, selalu gunakan format daftar berpoin dengan judul yang ditebalkan. Contoh: "* **Peran:** Analis Politik Kritis dan Objektif".',
@@ -109,6 +116,7 @@ def create_default_personas_for_user(user):
         )
         db.session.add_all([emil, anton])
         db.session.commit()
+# =================================================================
 
 # Forms
 class RegistrationForm(FlaskForm):
@@ -145,6 +153,7 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        # Panggil fungsi setelah user di-commit untuk mendapatkan user.id
         create_default_personas_for_user(user)
         flash('Akun Anda telah berhasil dibuat! Silakan login.', 'success')
         return redirect(url_for('login'))
@@ -198,13 +207,16 @@ def google_auth():
             )
             db.session.add(user)
             db.session.commit()
-    
-    if not user.google_id:
-        user.google_id = user_info['sub']
-        db.session.commit()
-        
+            # Panggil fungsi setelah user di-commit untuk mendapatkan user.id
+            create_default_personas_for_user(user)
+        else:
+            # Jika user sudah ada tapi belum tertaut google_id
+            if not user.google_id:
+                user.google_id = user_info['sub']
+                db.session.commit()
+            create_default_personas_for_user(user)
+
     login_user(user)
-    create_default_personas_for_user(user)
     return redirect(url_for('chat'))
 
 # === ENDPOINT MANAJEMEN PERSONA ===
@@ -311,4 +323,4 @@ def generate_prompt():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=False)
+    app.run(debug=True)
