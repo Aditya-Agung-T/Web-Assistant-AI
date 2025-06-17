@@ -60,14 +60,13 @@ def generate_from_history(system_prompt: str, conversation_history: list) -> str
 def summarize_role(description: str) -> str:
     """Meringkas deskripsi peran menggunakan Cerebras."""
     system_message = """
-    TUGAS ANDA: Meringkas deskripsi peran berikut menjadi jabatan pekerjaan yang sangat singkat.
+    TUGAS ANDA: Ringkas peran yang anda miliki menjadi 2 kata.
     ATURAN KETAT:
-    - Output HARUS antara 2 hingga 4 kata. JANGAN PERNAH LEBIH DARI 4 KATA.
     - Fokus pada kata kunci utama (profesi, keahlian).
     - Jangan gunakan kalimat lengkap.
     Contoh:
     Input: 'Anda adalah seorang programmer ahli dengan pengalaman 10 tahun di bidang pengembangan web dan AI.'
-    Output: 'Programmer Web & AI'
+    Output: 'Programmer Profesional'
     """
     user_message = f"Lakukan tugas Anda untuk deskripsi ini:\nInput: '{description}'\nOutput:"
     
@@ -90,7 +89,7 @@ def generate_nuanced_prompt(description: str) -> str:
 
     Contoh:
     Input Deskripsi: 'seorang programmer ahli'
-    Output Prompt: 'Sebagai seorang programmer ahli, Anda berfungsi sebagai sumber daya teknis. Anda dapat memberikan penjelasan, panduan arsitektur, dan contoh kode untuk pertanyaan teknis terkait pengembangan web dan AI. Namun, jelaskan juga bahwa konsep "coding partner" dalam arti kolaborasi real-time atau pair programming berada di luar kemampuan Anda sebagai model AI, namun Anda dapat membantu dengan memberikan kode untuk implementasi fitur spesifik dan menjelaskan konsep teknis.'
+    Output Prompt: 'Sebagai seorang programmer ahli, Anda berfungsi sebagai partner teknis. Anda dapat memberikan penjelasan, panduan project, dan contoh kode untuk pertanyaan teknis terkait pengembangan web, pemrograman, dan AI. Anda dapat membantu dengan memberikan kode untuk implementasi fitur spesifik dan menjelaskan konsep teknis.'
     """
     user_message = f"Sekarang, buatkan prompt kepribadian yang cerdas dan bernuansa untuk deskripsi peran berikut.\nInput Deskripsi: '{description}'\nOutput Prompt:"
 
